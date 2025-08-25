@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  xray-classifier-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount source code for live reloading
+      - .:/app
+      # Exclude node_modules and other unnecessary files
+      - /app/__pycache__
+      - /app/.git
+      - /app/.vscode
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONPATH=/app
+    env_file:
+      - env.development
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  xray-classifier-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "5001:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - PYTHONPATH=/app
+    env_file:
+      - env.production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
